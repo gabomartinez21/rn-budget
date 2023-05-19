@@ -3,7 +3,6 @@
 import React, {useState} from 'react';
 import {
   Alert,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
@@ -23,10 +22,10 @@ import { SpentList } from './src/components/SpentList';
 const App = () => {
 
   const [isValidBudget, setIsValidBudget] = useState(false);
-  
   const [budget, setBudget] = useState(0);
   const [expenses, setExpenses] = useState([]);
   const [modal, setModal] = useState(false)
+  const [spent, setSpent] = useState({})
 
 
   const handleNewBudget = budget => {
@@ -41,18 +40,30 @@ const App = () => {
     if(Object.values(spent).includes('')){
       Alert.alert('Error', 'You need to fill the fields');
       return
-    } 
+    }
 
-    spent.id = generateId();
-
-    setExpenses([...expenses, spent])
+    if(spent?.id) {
+      const newExpenses = expenses.map(expense => spent.id === expense.id ? spent : expense)
+      setExpenses(newExpenses)
+    } else {
+      spent.id = generateId();
+      spent.date = Date.now();
+      setExpenses([...expenses, spent])
+    }
     setModal(false)
 
   }
 
+  const handleRemove = id => {
+    const newExpenses = expenses.filter(expense => expense.id !== id)
+    setExpenses(newExpenses)
+    setSpent({})
+    setModal(false)
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scroll}>
+    <View style={styles.container}>
+      <ScrollView>
         <View style={styles.header}>
           <Header />
           {isValidBudget ? (
@@ -68,10 +79,14 @@ const App = () => {
             />
           )}
         </View>
-
         {isValidBudget && (
-          <SpentList expenses={expenses} />
+          <SpentList 
+            expenses={expenses} 
+            setModal={setModal}
+            setSpent={setSpent}
+          />
         )}
+
       </ScrollView>
 
 
@@ -86,6 +101,9 @@ const App = () => {
           <SpentForm 
             setModal={setModal}
             handleSpent={handleSpent}
+            setExpense={setSpent}
+            expense={spent}
+            handleRemove={handleRemove}
           />
         </Modal>
         )}
@@ -97,14 +115,15 @@ const App = () => {
           <Image style={styles.image} source={require('./src/img/nuevo-gasto.png')} />
         </Pressable>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#f5f5f5',
-    flex: 1
+    flex: 1,
+    minHeight: '100%'
   },
   header: {
     backgroundColor: '#3b82f6',
@@ -117,10 +136,6 @@ const styles = StyleSheet.create({
     bottom: 40,
     right: 30
   },
-  scroll: {
-    backgroundColor: 'pink',
-    height: '100%'
-  }
 });
 
 export default App;

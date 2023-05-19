@@ -1,25 +1,45 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Text, SafeAreaView, StyleSheet, View, TextInput, Pressable } from 'react-native'
 import { Picker } from '@react-native-picker/picker';
 import globalStyles from '../styles';
-export const SpentForm = ({setModal, handleSpent}) => {
+
+export const SpentForm = ({setModal, handleSpent, setExpense, expense, handleRemove}) => {
 
   const [spent, setSpent] = useState('')
   const [quantity, setQuantity] = useState('')
   const [category, setCategory] = useState('')
+
+  useEffect(() => {
+    if(expense?.spent) {
+      setSpent(expense.spent)
+      setQuantity(expense.quantity)
+      setCategory(expense.category)
+    }
+  }, [expense])
+
+  const handleSubmit = () => {
+    if(expense?.id) {
+      handleSpent({ spent, category, quantity, id: expense.id, date: expense.date});
+    } else {
+      handleSpent({ spent, category, quantity});
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <View>
         <Pressable 
           style={styles.btnCancel}
-          onLongPress={() => setModal(false)}  
+          onLongPress={() => {
+            setModal(false)
+            setExpense({})
+          }}  
         >
           <Text style={styles.btnCancelText}>Close</Text>
         </Pressable>
       </View>
       <View style={styles.form}>
-        <Text style={styles.title}>New Spent</Text>
+        <Text style={styles.title}>{expense?.spent ? 'Update Spent' : 'New Spent'}</Text>
 
         <View style={styles.field}>
           <Text style={styles.label}>Spent Name</Text>
@@ -47,7 +67,7 @@ export const SpentForm = ({setModal, handleSpent}) => {
             <Picker.Item label="Savings" value="savings"/>
             <Picker.Item label="Food" value="food"/>
             <Picker.Item label="Home" value="home"/>
-            <Picker.Item label="Other things" value="other-things"/>
+            <Picker.Item label="Other things" value="otherThings"/>
             <Picker.Item label="Health" value="health"/>
             <Picker.Item label="Suscriptions" value="suscription"/>
           </Picker>
@@ -55,10 +75,23 @@ export const SpentForm = ({setModal, handleSpent}) => {
 
         <Pressable 
           style={styles.btn}
-          onPress={() => handleSpent({ spent, category, quantity})}
+          onPress={handleSubmit}
         >
-          <Text style={styles.btnText}>Add spent</Text>
+          <Text style={styles.btnText}>
+            {expense.id ? 'Update' : 'Add spent'}
+          </Text>
         </Pressable>
+        {expense.id && (
+          <Pressable 
+            style={[styles.btn, styles.btnDelete]}
+            onPress={() => handleRemove(expense.id)}
+          >
+            <Text style={styles.btnText}>
+              Remove
+            </Text>
+          </Pressable>
+          
+        )}
       </View>
 
     </SafeAreaView>
@@ -116,5 +149,8 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: '#fff',
     fontWeight: 'bold',
+  },
+  btnDelete: {
+    backgroundColor: '#db2777',
   }
 })
